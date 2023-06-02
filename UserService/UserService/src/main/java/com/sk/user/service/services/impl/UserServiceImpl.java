@@ -4,8 +4,10 @@ import com.sk.user.service.entities.Hotel;
 import com.sk.user.service.entities.Rating;
 import com.sk.user.service.entities.User;
 import com.sk.user.service.exception.ResourceNotFoundException;
+import com.sk.user.service.external.services.HotelService;
 import com.sk.user.service.repositories.UserRepository;
 import com.sk.user.service.services.UserService;
+import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -33,6 +35,10 @@ public class UserServiceImpl implements UserService {
     @Autowired
     private RestTemplate restTemplate;
 
+
+    @Autowired
+    private HotelService hotelService;
+
     @Override
     public User saveUser(User user) {
 
@@ -43,6 +49,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+
     public List<User> getAllUser() {
         return userRepository.findAll();
     }
@@ -69,12 +76,15 @@ public class UserServiceImpl implements UserService {
             //api call to hotel Services
 
             //http://localhost:8082/hotels/69d70a96-7d7a-4478-8e6f-083b2e1fe2de
-            ResponseEntity<Hotel>  forEntity=restTemplate.getForEntity("http://HOTEL-SERVICE/hotels/"+rating.getHotelId(), Hotel.class);
-            Hotel hotel=forEntity.getBody();
+         //   ResponseEntity<Hotel>  forEntity=restTemplate.getForEntity("http://HOTEL-SERVICE/hotels/"+rating.getHotelId(), Hotel.class);
+           // Hotel hotel=forEntity.getBody();
 
-            logger.info("response status "+forEntity.getStatusCode());
+            Hotel hotel=hotelService.getHotel(rating.getHotelId());
+        //    logger.info("response status "+forEntity.getStatusCode());
             //set hotel to rating
             rating.setHotel(hotel);
+
+
             return  rating;
 
         }).collect(Collectors.toList());
